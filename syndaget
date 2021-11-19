@@ -1,0 +1,108 @@
+#!/bin/bash
+# Simple script to retrieve contents of synda ESGF mirror
+# (2021) by Jost von Hardenberg (jost.hardenberg@polito.it)
+# The only dependency is CDO
+INDIR=/work/datasets/synda/data
+
+if [ $# -lt 1 ] ; then
+cat << EOF
+    syndaget [OPTIONS] 
+
+    Retrieve datasets available in synda archive
+
+    OPTIONS:
+       proj=<proj>  Project (CMIP6/cmip5); default: CMIP6; synonym: project
+       model=<model> Model; default: *; synonym: mod
+       exp=<exp> Experiment; default: *; synony: experiment
+       ripf=<ripf> Ensemble member, eg. r1i1p1f1; default: *; synonyms: ens, rip
+       var=<var>   Variable short name; default: tas; synonym: variable
+       freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
+       mip=<mip>     MIP; default: *
+       post=<cmd> execute cdo command <cmd> after joining the files
+       last=<num> keep only last <num> years
+       years=<yy> years to keep (eg. 1980/2000) 
+
+    Example:
+    syndaget var=rsut exp=piControl freq=Amon last=75 post="-timmean -zonmean"
+EOF
+exit 1
+fi
+
+PRE=""
+POST=""
+YEARS=""
+LAST=""
+PROJ=CMIP6
+MODEL=*
+EXP=*
+RIPF=*
+VAR=tas
+FREQ=Amon
+MIP=*
+
+for ARGUMENT in "$@"
+do
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    VALUE=$(echo $ARGUMENT | cut -f2 -d=)
+
+    case "$KEY" in
+            var)    VAR=${VALUE} ;;
+            variable)    VAR=${VALUE} ;;
+            proj)    PROJ=${VALUE} ;;
+            project)    PROJ=${VALUE} ;;
+            model)    MODEL=${VALUE} ;;
+            mod)    MODEL=${VALUE} ;;
+            ripf)    RIPF=${VALUE} ;;
+            rip)    RIPF=${VALUE} ;;
+            experiment)     EXP=${VALUE} ;;
+            exp)     EXP=${VALUE} ;;
+            freq)  FREQ=${VALUE} ;;
+            frequency)  FREQ=${VALUE} ;;
+            table)  FREQ=${VALUE} ;;
+            time)  FREQ=${VALUE} ;;
+            mip)  MIP=${VALUE} ;;
+            pre)  PRE=${VALUE} ;;
+            post)  POST=${VALUE} ;;
+            last)  LAST=${VALUE} ;;
+            years)  YEARS=${VALUE} ;;
+            *)
+    esac
+done
+
+case "$PROJ" in
+   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6 ;;
+   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6 ;;
+   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/*"; yn=5 ;;
+   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6 ;;
+   *)  echo "Not a recognized project."; exit 1 ;;
+esac
+
+POST2=""
+
+for dir in $pat
+do
+       first=$(basename -a $dir/$VAR*.nc |head -1)
+       last=$(basename -a $dir/$VAR*.nc |tail -1)
+       readarray -d_ -t fld1 <<<"$first"   
+       readarray -d_ -t fld2 <<<"$last"   
+       y1=$(echo ${fld1[$yn]}| cut -f1 -d- )
+       y2=$(echo ${fld2[$yn]}| cut -f2 -d-|cut -f1 -d. )
+       if [ -n "$y1" ]; then
+          y1=${y1:0:4}
+          y2=${y2:0:4}
+          if [ -n "$LAST" ]; then
+             y2f=$(printf "%4d" $((10#$y2)))
+             y1=$(( $y2f - $LAST + 1 ))
+             y1=$(printf "%04d" $y1)
+             POST2="-selyear,$y1/$y2"
+          fi
+          if [ -n "$YEARS" ]; then
+             POST2="-selyear,$YEARS"
+             y1=$(echo $YEARS|cut -d/ -f1|xargs printf "%04d" )
+             y2=$(echo $YEARS|cut -d/ -f2|xargs printf "%04d" )
+          fi
+          echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $y1 $y2
+          rm -rf ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
+          cdo $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
+       fi
+done

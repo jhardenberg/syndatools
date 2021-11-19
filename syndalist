@@ -1,0 +1,117 @@
+#!/bin/bash
+# Simple script to list contents of synda ESGF mirror
+# (2021) by Jost von Hardenberg (jost.hardenberg@polito.it)
+# The only dependency is CDO
+
+INDIR=/work/datasets/synda/data
+
+function help {
+cat << EOF
+    syndalist [OPTIONS] [ARGUMENTS] 
+    
+    List datasets available in synda archive
+
+    OPTIONS:
+       -p            Print full path to data instead
+       -c            Check for completeness (all years in sequence present)
+       -g            Print grid type (if relevant)
+       -h            Print this help
+
+    ARGUMENTS:
+       proj=<proj>   Project (CMIP6/cmip5); default: CMIP6; synonym: project
+       model=<model> Model; default: *; synonym: mod
+       exp=<exp>     Experiment; default: *; synonym: experiment
+       ripf=<ripf>   Ensemble member, eg. r1i1p1f1; default: *; synonyms: rip, ens
+       var=<var>     Variable short name; default: tas; synonym: variable
+       freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
+       mip=<mip>     MIP; default: *
+
+    Example:
+       syndalist var=tas exp=historical freq=day
+EOF
+}
+
+if [ $# -lt 1 ] ; then
+    help; exit 1;
+fi
+
+PROJ=CMIP6
+MODEL=*
+EXP=*
+RIPF=*
+VAR=tas
+FREQ=Amon
+MIP=*
+FPATH=false
+FCOMP=false
+FGRID=false
+
+for ARGUMENT in "$@"
+do
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    VALUE=$(echo $ARGUMENT | cut -f2 -d=)
+
+    case "$KEY" in
+            var)    VAR=${VALUE} ;;
+            variable)    VAR=${VALUE} ;;
+            proj)    PROJ=${VALUE} ;;
+            project)    PROJ=${VALUE} ;;
+            model)    MODEL=${VALUE} ;;
+            mod)    MODEL=${VALUE} ;;
+            ripf)    RIPF=${VALUE} ;;
+            rip)    RIPF=${VALUE} ;;
+            experiment)     EXP=${VALUE} ;;
+            exp)     EXP=${VALUE} ;;
+            freq)  FREQ=${VALUE} ;;
+            frequency)  FREQ=${VALUE} ;;
+            table)  FREQ=${VALUE} ;;
+            time)  FREQ=${VALUE} ;;
+            mip)  MIP=${VALUE} ;;
+            -p)  FPATH=true ;;
+            -c)  FCOMP=true ;;
+            -g)  FGRID=true ;;
+            -h) help; exit 1;;
+            *)
+    esac
+done
+
+case "$PROJ" in
+   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6; gn=5  ;;
+   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6; gn=5 ;;
+   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/*"; yn=5; gn=99;;
+   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6; gn=99 ;;
+   *)  echo "Not a recognized project."; exit 1 ;;
+esac
+
+SGRID=""
+for dir in $pat
+do
+       first=$(basename -a $dir/$VAR*.nc |head -1)
+       last=$(basename -a $dir/$VAR*.nc |tail -1)
+       readarray -d_ -t fld1 <<<"$first"   
+       readarray -d_ -t fld2 <<<"$last"   
+y1=$(echo ${fld1[$yn]}| cut -f1 -d- )
+       y2=$(echo ${fld2[$yn]}| cut -f2 -d-|cut -f1 -d. )
+# Check if complete (based only on year)
+       INCOMP=""
+       if $FCOMP; then
+         yp=${y1:0:4}
+         for f in $(basename -a $dir/$VAR*.nc)
+         do
+           readarray -d_ -t fld1 <<<"$f"   
+           ys=$(echo ${fld1[$yn]}| cut -f1 -d- ); ys=${ys:0:4}
+           [ "$ys" != "$yp" ] && INCOMP=" $(tput setaf 1)incomplete$(tput sgr0)";
+           yp=$(echo ${fld1[$yn]}| cut -f2 -d-|cut -f1 -d. ); yp=${yp:0:4}
+           yp=$(( $yp + 1 ))
+         done
+       fi
+       if $FGRID;  then SGRID=${fld1[$gn]}; fi
+       if [ -n "$y1" ]; then
+         if $FPATH; then
+          echo $dir $y1 $y2 $INCOMP
+         else
+          echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $SGRID $y1 $y2 $INCOMP
+         fi
+       fi
+       
+done
