@@ -80,7 +80,6 @@ case "$PROJ" in
    CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
    *)  echo "Not a recognized project."; exit 1 ;;
 esac
- echo $pat
 POST2=""
 for dir in $pat
 do
