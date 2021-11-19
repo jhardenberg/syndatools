@@ -33,3 +33,7 @@ Just enter the commands to get a full list of options.
 Example: `INDIR=/work/datasets/synda/data` 
 
 2. Place them as executables in a directory in your path.
+
+## Dependencies
+
+The only dependence is [cdo](https://code.mpimet.mpg.de/projects/cdo/).
