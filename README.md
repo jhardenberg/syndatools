@@ -29,7 +29,7 @@ Just enter the commands to get a full list of options.
 
 ## Configuration
 
-1. Open both commands with a text editor and change the variable `INDIR` to point to the location of your synda ESGF archive
+1. Open both commands with a text editor and change the variable `INDIR` to point to the location of your synda ESGF archive.
 Example: `INDIR=/work/datasets/synda/data` 
 
 2. Place them as executables in a directory in your path.
