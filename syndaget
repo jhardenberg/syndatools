@@ -11,13 +11,14 @@ cat << EOF
     Retrieve datasets available in synda archive
 
     OPTIONS:
-       proj=<proj>  Project (CMIP6/cmip5); default: CMIP6; synonym: project
+       proj=<proj>   Project (CMIP6/cmip5); default: CMIP6; synonym: project
        model=<model> Model; default: *; synonym: mod
-       exp=<exp> Experiment; default: *; synony: experiment
-       ripf=<ripf> Ensemble member, eg. r1i1p1f1; default: *; synonyms: ens, rip
-       var=<var>   Variable short name; default: tas; synonym: variable
+       exp=<exp>     Experiment; default: *; synony: experiment
+       ripf=<ripf>   Ensemble member, eg. r1i1p1f1; default: *; synonyms: ens, rip
+       var=<var>     Variable short name; default: tas; synonym: variable
        freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
        mip=<mip>     MIP; default: *
+       ver=<ver>     Version; default *; synonym: version
        post=<cmd> execute cdo command <cmd> after joining the files
        last=<num> keep only last <num> years
        years=<yy> years to keep (eg. 1980/2000) 
@@ -39,6 +40,7 @@ RIPF=*
 VAR=tas
 FREQ=Amon
 MIP=*
+VERSION=*
 
 for ARGUMENT in "$@"
 do
@@ -62,6 +64,8 @@ do
             time)  FREQ=${VALUE} ;;
             mip)  MIP=${VALUE} ;;
             pre)  PRE=${VALUE} ;;
+            version) VERSION=${VALUE} ;; 
+            ver) VERSION=${VALUE} ;; 
             post)  POST=${VALUE} ;;
             last)  LAST=${VALUE} ;;
             years)  YEARS=${VALUE} ;;
@@ -70,17 +74,17 @@ do
 done
 
 case "$PROJ" in
-   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6 ;;
-   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6 ;;
-   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/*"; yn=5 ;;
-   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6 ;;
+   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6 ;;
+   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6 ;;
+   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
+   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
    *)  echo "Not a recognized project."; exit 1 ;;
 esac
-
+ echo $pat
 POST2=""
-
 for dir in $pat
 do
+       VER=${dir##*/}
        first=$(basename -a $dir/$VAR*.nc |head -1)
        last=$(basename -a $dir/$VAR*.nc |tail -1)
        readarray -d_ -t fld1 <<<"$first"   
@@ -101,8 +105,8 @@ do
              y1=$(echo $YEARS|cut -d/ -f1|xargs printf "%04d" )
              y2=$(echo $YEARS|cut -d/ -f2|xargs printf "%04d" )
           fi
-          echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $y1 $y2
+          echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $y1 $y2 $VER
           rm -rf ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
-          cdo $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
+          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
        fi
 done

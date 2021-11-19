@@ -25,6 +25,7 @@ cat << EOF
        var=<var>     Variable short name; default: tas; synonym: variable
        freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
        mip=<mip>     MIP; default: *
+       ver=<ver>     Version; default *; synonyms: version
 
     Example:
        syndalist var=tas exp=historical freq=day
@@ -35,6 +36,7 @@ if [ $# -lt 1 ] ; then
     help; exit 1;
 fi
 
+VERSION=*
 PROJ=CMIP6
 MODEL=*
 EXP=*
@@ -67,6 +69,8 @@ do
             table)  FREQ=${VALUE} ;;
             time)  FREQ=${VALUE} ;;
             mip)  MIP=${VALUE} ;;
+            ver)  VERSION=${VALUE} ;;
+            version)  VERSION=${VALUE} ;;
             -p)  FPATH=true ;;
             -c)  FCOMP=true ;;
             -g)  FGRID=true ;;
@@ -76,21 +80,22 @@ do
 done
 
 case "$PROJ" in
-   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6; gn=5  ;;
-   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6; gn=5 ;;
-   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/*"; yn=5; gn=99;;
-   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/*"; yn=6; gn=99 ;;
+   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6; gn=5  ;;
+   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6; gn=5 ;;
+   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99;;
+   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
    *)  echo "Not a recognized project."; exit 1 ;;
 esac
 
 SGRID=""
 for dir in $pat
 do
+       VER=${dir##*/}
        first=$(basename -a $dir/$VAR*.nc |head -1)
        last=$(basename -a $dir/$VAR*.nc |tail -1)
        readarray -d_ -t fld1 <<<"$first"   
        readarray -d_ -t fld2 <<<"$last"   
-y1=$(echo ${fld1[$yn]}| cut -f1 -d- )
+       y1=$(echo ${fld1[$yn]}| cut -f1 -d- )
        y2=$(echo ${fld2[$yn]}| cut -f2 -d-|cut -f1 -d. )
 # Check if complete (based only on year)
        INCOMP=""
@@ -110,7 +115,7 @@ y1=$(echo ${fld1[$yn]}| cut -f1 -d- )
          if $FPATH; then
           echo $dir $y1 $y2 $INCOMP
          else
-          echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $SGRID $y1 $y2 $INCOMP
+          echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $SGRID $y1 $y2 $VER $INCOMP
          fi
        fi
        
