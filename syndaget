@@ -2,7 +2,8 @@
 # Simple script to retrieve contents of synda ESGF mirror
 # (2021) by Jost von Hardenberg (jost.hardenberg@polito.it)
 # The only dependency is CDO
-INDIR=/work/datasets/synda/data
+
+INDIR=${ST_HOME:-/work/datasets/synda}/data
 
 function help {
 cat << EOF
