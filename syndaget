@@ -4,29 +4,35 @@
 # The only dependency is CDO
 INDIR=/work/datasets/synda/data
 
-if [ $# -lt 1 ] ; then
+function help {
 cat << EOF
-    syndaget [OPTIONS] 
-
-    Retrieve datasets available in synda archive
+    syndalist [OPTIONS] [ARGUMENTS] 
+    
+    List datasets available in synda archive
 
     OPTIONS:
+       -p            Print full path to data instead
+       -c            Check for completeness (all years in sequence present)
+       -g            Print grid type (if relevant)
+       -h            Print this help
+
+    ARGUMENTS:
        proj=<proj>   Project (CMIP6/cmip5); default: CMIP6; synonym: project
        model=<model> Model; default: *; synonym: mod
-       exp=<exp>     Experiment; default: *; synony: experiment
-       ripf=<ripf>   Ensemble member, eg. r1i1p1f1; default: *; synonyms: ens, rip
+       exp=<exp>     Experiment; default: *; synonym: experiment
+       ripf=<ripf>   Ensemble member, eg. r1i1p1f1; default: *; synonyms: rip, ens
        var=<var>     Variable short name; default: tas; synonym: variable
        freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
        mip=<mip>     MIP; default: *
-       ver=<ver>     Version; default *; synonym: version
-       post=<cmd> execute cdo command <cmd> after joining the files
-       last=<num> keep only last <num> years
-       years=<yy> years to keep (eg. 1980/2000) 
+       ver=<ver>     Version; default *; synonyms: version
 
     Example:
-    syndaget var=rsut exp=piControl freq=Amon last=75 post="-timmean -zonmean"
+       syndalist var=tas exp=historical freq=day
 EOF
-exit 1
+}
+
+if [ $# -lt 1 ] ; then
+    help; exit 1;
 fi
 
 PRE=""
@@ -69,6 +75,7 @@ do
             post)  POST=${VALUE} ;;
             last)  LAST=${VALUE} ;;
             years)  YEARS=${VALUE} ;;
+            -h) help; exit 1;;
             *)
     esac
 done
