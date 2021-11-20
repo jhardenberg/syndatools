@@ -80,17 +80,18 @@ do
 done
 
 case "$PROJ" in
-   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6; gn=5  ;;
-   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6; gn=5 ;;
-   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99;;
-   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
+   CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6; gn=5; yv=1 ;;
+   cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6; gn=5; yv=1 ;;
+   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION/$VAR"; yn=5; gn=99; yv=2 ;;
+   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION/$VAR"; yn=5; gn=99; yv=2 ;;
    *)  echo "Not a recognized project."; exit 1 ;;
 esac
 
 SGRID=""
 for dir in $pat
 do
-       VER=${dir##*/}
+       readarray -d/ -t arr <<<"$dir"
+       VER=${arr[$(( ${#array[@]} - $yv ))]}
        first=$(basename -a $dir/$VAR*.nc |head -1)
        last=$(basename -a $dir/$VAR*.nc |tail -1)
        readarray -d_ -t fld1 <<<"$first"   

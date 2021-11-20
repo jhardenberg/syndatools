@@ -84,8 +84,8 @@ done
 case "$PROJ" in
    CMIP6)  pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6 ;;
    cmip6)  PROJ=CMIP6; pat="$INDIR/$PROJ/$MIP/*/$MODEL/$EXP/$RIPF/$FREQ/$VAR/*/$VERSION"; yn=6 ;;
-   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
-   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION"; yn=5; gn=99 ;;
+   cmip5)  pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION/$VAR"; yn=5; gn=99 ;;
+   CMIP5)  PROJ=cmip5; pat="$INDIR/$PROJ/*/*/$MODEL/$EXP/*/*/$FREQ/$RIPF/$VERSION/$VAR"; yn=5; gn=99 ;;
    *)  echo "Not a recognized project."; exit 1 ;;
 esac
 POST2=""
