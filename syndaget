@@ -10,7 +10,7 @@ cat << EOF
 
     Retrieve datasets available in synda archive
 
-    OPTIONS:
+    ARGUMENTS:
        proj=<proj>   Project (CMIP6/cmip5); default: CMIP6; synonym: project
        model=<model> Model; default: *; synonym: mod
        exp=<exp>     Experiment; default: *; synony: experiment
