@@ -52,7 +52,7 @@ VERSION=*
 for ARGUMENT in "$@"
 do
     KEY=$(echo $ARGUMENT | cut -f1 -d=)
-    VALUE=$(echo $ARGUMENT | cut -f2 -d=)
+    VALUE=$(echo $ARGUMENT | cut -f2- -d=)
 
     case "$KEY" in
             var)    VAR=${VALUE} ;;
@@ -114,6 +114,7 @@ do
           fi
           echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $y1 $y2 $VER
           rm -rf ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
-          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
+          echo cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
+#          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
        fi
 done
