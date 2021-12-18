@@ -20,10 +20,13 @@ cat << EOF
        freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
        mip=<mip>     MIP; default: *
        ver=<ver>     Version; default *; synonym: version
-       post=<cmd>    execute cdo command <cmd> after joining the files
-       last=<num>    keep only last <num> years
-       years=<yy>    years to keep (eg. 1980/2000) 
-       out=<fname>   name of output file; synonym: output
+       post=<cmd>    Execute cdo command <cmd> after joining the files
+       last=<num>    Keep only last <num> years
+       years=<yy>    Years to keep (eg. 1980/2000) 
+       out=<fname>   Name of output file; synonym: output
+       netcdf=<lev>  Netcdf4 conversion and compression at level <lev>; 
+                     default: original data format; synonyms: netcdf4, nc4, nc
+       opt=<opt>     Additional CDO options; synonims: option
 
     OPTIONS:
        -h            Print this help
@@ -37,10 +40,14 @@ if [ $# -lt 1 ] ; then
     help; exit 1;
 fi
 
+export REMAP_EXTRAPOLATE=off
+
 PRE=""
 POST=""
+OPT=""
 YEARS=""
 LAST=""
+NETCDF=""
 PROJ=CMIP6
 MODEL=*
 EXP=*
@@ -77,8 +84,14 @@ do
             post)  POST=${VALUE} ;;
             last)  LAST=${VALUE} ;;
             years)  YEARS=${VALUE} ;;
-            out)  FNAME=${VALUE} ;;
-            output)  FNAME=${VALUE} ;;
+            out)  OFNAME=${VALUE} ;;
+            output)  OFNAME=${VALUE} ;;
+            netcdf)  NETCDF="-f nc4c -z zip_"${VALUE} ;;
+            netcdf4)  NETCDF="-f nc4c -z zip_"${VALUE} ;;
+            nc)  NETCDF="-f nc4c -z zip_"${VALUE} ;;
+            nc4)  NETCDF="-f nc4c -z zip_"${VALUE} ;;
+            opt)  OPT=${VALUE} ;;
+            option)  OPTION=${VALUE} ;;
             -h) help; exit 1;;
             *)
     esac
@@ -116,12 +129,13 @@ do
              y2=$(echo $YEARS|cut -d/ -f2|xargs printf "%04d" )
           fi
           echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $y1 $y2 $VER
-          echo $FNAME
-          if [ -z "$FNAME" ]; then
+          if [ -z "$OFNAME" ]; then
              FNAME=${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc 
+          else
+             FNAME=$OFNAME
           fi
           rm -rf ./$FNAME
-          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./$FNAME
+          cdo -s $OPT $NETCDF $POST $POST2 -cat $dir/$VAR*.nc ./$FNAME
 #          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
        fi
 done
