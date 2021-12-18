@@ -14,15 +14,16 @@ cat << EOF
     ARGUMENTS:
        proj=<proj>   Project (CMIP6/cmip5); default: CMIP6; synonym: project
        model=<model> Model; default: *; synonym: mod
-       exp=<exp>     Experiment; default: *; synony: experiment
+       exp=<exp>     Experiment; default: *; synonym: experiment
        ripf=<ripf>   Ensemble member, eg. r1i1p1f1; default: *; synonyms: ens, rip
        var=<var>     Variable short name; default: tas; synonym: variable
        freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
        mip=<mip>     MIP; default: *
        ver=<ver>     Version; default *; synonym: version
-       post=<cmd> execute cdo command <cmd> after joining the files
-       last=<num> keep only last <num> years
-       years=<yy> years to keep (eg. 1980/2000) 
+       post=<cmd>    execute cdo command <cmd> after joining the files
+       last=<num>    keep only last <num> years
+       years=<yy>    years to keep (eg. 1980/2000) 
+       out=<fname>   name of output file; synonym: output
 
     OPTIONS:
        -h            Print this help
@@ -76,6 +77,8 @@ do
             post)  POST=${VALUE} ;;
             last)  LAST=${VALUE} ;;
             years)  YEARS=${VALUE} ;;
+            out)  FNAME=${VALUE} ;;
+            output)  FNAME=${VALUE} ;;
             -h) help; exit 1;;
             *)
     esac
@@ -113,8 +116,12 @@ do
              y2=$(echo $YEARS|cut -d/ -f2|xargs printf "%04d" )
           fi
           echo ${fld1[0]} ${fld1[1]} ${fld1[2]} ${fld1[3]} ${fld1[4]} $y1 $y2 $VER
-          rm -rf ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
-          echo cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
+          echo $FNAME
+          if [ -z "$FNAME" ]; then
+             FNAME=${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc 
+          fi
+          rm -rf ./$FNAME
+          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./$FNAME
 #          cdo -s $POST $POST2 -cat $dir/$VAR*.nc ./${fld1[0]}_${fld1[1]}_${fld1[2]}_${fld1[3]}_${fld1[4]}_${y1}01-${y2}12.nc
        fi
 done
