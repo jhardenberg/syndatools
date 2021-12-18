@@ -22,7 +22,7 @@ cat << EOF
        model=<model> Model; default: *; synonym: mod
        exp=<exp>     Experiment; default: *; synonym: experiment
        ripf=<ripf>   Ensemble member, eg. r1i1p1f1; default: *; synonyms: rip, ens
-       var=<var>     Variable short name; default: tas; synonym: variable
+       var=<var>     Variable short name; synonym: variable
        freq=<freq>   Frequency; default: Amon; synonyms: time, frequency, table
        mip=<mip>     MIP; default: *
        ver=<ver>     Version; default *; synonyms: version
